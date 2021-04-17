@@ -79,6 +79,7 @@ async function searchdmart(url, browserInstance, itemname){
     await newtab.goto(url)
     await watiAndtype("#scrInput", itemname, newtab)
     await waitAndClick(".src-client-components-header-components-search-__search-module___searchButton.MuiButton-containedPrimary", newtab)
+    await newtab.waitForSelector(".MuiGrid-root.MuiGrid-item.MuiGrid-grid-xs-12.MuiGrid-grid-sm-6.MuiGrid-grid-md-4.MuiGrid-grid-lg-auto.MuiGrid-grid-xl-auto", {visible : true})
     let itemdetailarr = []
     let name = await newtab.evaluate(() => document.querySelectorAll("a.src-client-components-product-card-vertical-card-__vertical-card-module___title")[0].innerText)
     let price = await newtab.evaluate(() => document.querySelectorAll(".src-client-components-product-card-vertical-card-__vertical-card-module___price-container")[1].innerText.split(" ")[1])
