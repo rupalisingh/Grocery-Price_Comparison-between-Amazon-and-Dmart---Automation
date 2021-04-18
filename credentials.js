@@ -1,12 +1,12 @@
 module.exports = {
     credential : [
         {
-            "mobile" : "9967886130",
-            "pass" : "Rupalisingh"
+            "mobile" : "8343xxxxx",
+            "pass" : "enter your password"
     },
     {
-        "mobile" : "9967886130",
-        "pass" : "Rupali123,."
+        "mobile" : "Enter your mobile no",
+        "pass" : "Enter your password"
     }
 ]
 }
