@@ -19,10 +19,7 @@ let links = ["https://www.dmart.in/", "https://www.amazon.in/"];
             let itemname = itemobj.name
             let dmartresult = await searchdmart(dmarttab, browserInstance,itemname)
             let amazonresult = await searchamazon(amazontab, browserInstance, itemname)
-            
             await pricecomparison(dmartresult, amazonresult, browserInstance)
-            //console.log(bestprice)
-     
         }
     }catch (err) {
         console.log(err);
@@ -38,10 +35,10 @@ async function logindmart(url, browserInstance){
     await waitAndClick("li button", newtab, {delay : 400})
     await newtab.keyboard.press("Enter")
     await waitAndClick(".src-client-components-pincode-widget-__pincode-widget-module___success-cntr [type]", newtab, {delay : 400})
-    await waitAndClick("button[title = 'SignIn']", newtab, {delay : 400})
-    await newtab.setDefaultNavigationTimeout(0); 
-    await watiAndtype("input[name='mobileNumber']", credobj.mobile, newtab, {delay : 400})
-    await watiAndtype("input[name='password']", credobj.pass, newtab, {delay : 400})
+    await waitAndClick("button[title = 'SignIn']", newtab)
+    await newtab.waitForTimeout(5000); 
+    await watiAndtype("input[name='mobileNumber']", credobj.mobile, newtab, {delay : 800})
+    await watiAndtype("input[name='password']", credobj.pass, newtab, {delay : 800})
     await waitAndClick(".src-client-components-auth-__common-module___loginForm .MuiButton-label", newtab, {delay : 400})
     
     return newtab.url()
@@ -53,22 +50,29 @@ async function loginamazon(url, browserInstance){
     let newtab = await browserInstance.newPage();
     let credobj = credential[1]
     await newtab.setDefaultNavigationTimeout(0); 
-    await newtab.goto(url);
+    await newtab.goto(url,{
+        waiUntil : 'load',
+        timeout : 0
+    });
     await newtab.click(".nav-line-1-container")
-    await watiAndtype("input[type = 'email']", credobj.mobile, newtab, {delay : 200})
-    await waitAndClick(".a-button-input", newtab, {delay : 200})
-    await watiAndtype("input[type = 'password']", credobj.pass, newtab, {delay : 200})
-    await waitAndClick(".a-button-input", newtab, {dealy : 500})
-    await waitAndClick("#nav-logo-sprites", newtab, {delay : 500})
+    await watiAndtype("input[type = 'email']", credobj.mobile, newtab, {delay : 800})
+    await waitAndClick(".a-button-input", newtab, {delay : 800})
+    await watiAndtype("input[type = 'password']", credobj.pass, newtab, {delay : 800})
+    await waitAndClick(".a-button-input", newtab, {dealy : 800})
+    await waitAndClick("#nav-logo-sprites", newtab, {delay : 800})
     return newtab.url();
 
 }
 
 async function searchdmart(url, browserInstance, itemname){
     let newtab = await browserInstance.newPage()
-    await newtab.goto(url)
-    await watiAndtype("#scrInput", itemname, newtab, {delay : 200})
-    await waitAndClick(".src-client-components-header-components-search-__search-module___searchButton.MuiButton-containedPrimary", newtab, {delay : 200})
+    await newtab.goto(url, {
+        waiUntil : 'load',
+        timeout : 0
+    })
+    await watiAndtype("#scrInput", itemname, newtab, {delay : 900})
+    await waitAndClick(".src-client-components-header-components-search-__search-module___searchButton.MuiButton-containedPrimary", newtab, {delay : 500})
+    await newtab.waitForTimeout(2000)
     await newtab.waitForSelector(".MuiGrid-grid-lg-auto.MuiGrid-grid-xl-auto", {visible : true})
     let itemdetailarr = []
     let name = await newtab.evaluate(() => document.querySelectorAll("a.src-client-components-product-card-vertical-card-__vertical-card-module___title")[0].innerText)
@@ -92,9 +96,13 @@ async function searchdmart(url, browserInstance, itemname){
 
 async function searchamazon(url, browserInstance, itemname){
     let newtab = await browserInstance.newPage()
-    await newtab.goto(url)
+    await newtab.goto(url, {
+        waiUntil : 'load',
+        timeout : 0
+    })
     await watiAndtype("#twotabsearchtextbox", itemname, newtab, {delay : 200})
     await waitAndClick("#nav-search-submit-button", newtab, {delay : 200})
+    await newtab.waitForTimeout(2000)
     await newtab.waitForSelector("h2.a-size-mini.a-spacing-none.a-color-base.s-line-clamp-4", {visible : true})
     // list of all the items on that page
     function getitem(listofitems){
@@ -111,7 +119,6 @@ async function searchamazon(url, browserInstance, itemname){
     let allitemsinpage = await newtab.evaluate(getitem,'.a-size-base-plus.a-color-base.a-text-normal')
     //console.log(allitemsinpage)
     let index = await IfitemIspresent(allitemsinpage, itemname)
-    console.log("Index =>" + index)
     let itemdetailarr = []
     let name = itemname
     let curpageurl = newtab.url()
@@ -119,7 +126,13 @@ async function searchamazon(url, browserInstance, itemname){
         item_availability = false
         price = Number.MAX_VALUE
     }else{
-        price = await newtab.evaluate(() => document.querySelectorAll(".a-price-whole")[index].innerText)
+        function togetprice(priceselector, index){
+            let allpricearr = document.querySelectorAll(priceselector)
+            let getprice = allpricearr[index].innerText
+            return getprice
+        }
+        price = await newtab.evaluate(togetprice, ".a-price-whole", index)
+        // console.log(price)
         item_availability = true
     }
     itemdetailarr.push({
@@ -137,12 +150,12 @@ async function IfitemIspresent(allitemsinpage, itemname){
     for(let i = 0; i<allitemsinpage.length; i++){
         let name = allitemsinpage[i].split(',')[0]
         let newname = name.toLowerCase()
-        let quant = allitemsinpage[i].split(',')
+        let quant = allitemsinpage[i].split(',')[1]
         if(newname.includes(itemnameonly) && quant.includes(itemquantonly)){
-            console.log("Item found" + i)
+            // console.log("Item found" + i)
             return i
         }else{
-            console.log("Item not found")
+            // console.log("Item not found")
             return -1
         }
     }
@@ -163,23 +176,34 @@ async function pricecomparison(dmartresult, amazonresult, browserInstance){
 
 async function pushcartdmart(dmartresult,browserInstance){
     let newtab = await browserInstance.newPage()
-    await newtab.goto(dmartresult[0].curpageurl)
+    await newtab.goto(dmartresult[0].curpageurl, {
+        waiUntil : 'load',
+        timeout : 0
+    })
     await waitAndClick("[class] [class='MuiGrid-root MuiGrid-item MuiGrid-grid-xs-12 MuiGrid-grid-sm-6 MuiGrid-grid-md-4 MuiGrid-grid-lg-auto MuiGrid-grid-xl-auto']:nth-of-type(1) .src-client-components-product-card-vertical-card-__vertical-card-module___action-container [tabindex='0'] .MuiButton-label.jss28 .src-client-components-product-card-cart-action-__cart-action-module___action-label", newtab)
-    // await newtab.waitForSelector(".src-client-components-product-card-cart-action-__cart-action-module___action-label")
-    // let getelem = await newtab.evaluate(() => document.querySelectorAll(".src-client-components-product-card-cart-action-__cart-action-module___action-label")[0])
-    // await newtab.click(getelem)
-    console.log("Dmart cart")
+    await newtab.waitForTimeout(3000)
 }
 
 async function pushcartamazon(amazonresult, browserInstance){
     let newtab = await browserInstance.newPage()
-    await newtab.goto(amazonresult[0].curpageurl)
-    let obj = amazonresult[3]
+    await newtab.goto(amazonresult[0].curpageurl, {
+        waiUntil : 'load',
+        timeout : 0
+    })
+    let obj = amazonresult[0]
     let getindex = obj.index
-    let getelem = await newtab.evaluate(() => document.querySelectorAll(".a-section.aok-relative.s-image-square-aspect")[getindex])
-    await waitAndClick(getelem, newtab)
+    function getitem(itemselector, getindex){
+        let allitemarr = document.querySelectorAll(itemselector)
+        console.log(allitemarr)
+        let selecteditem = allitemarr[getindex]
+        console.log(selecteditem)
+        return selecteditem
+    }
+
+    let getitemresult = await newtab.evaluate(getitem, ".a-size-base-plus.a-color-base.a-text-normal", getindex)
+    console.log(getitemresult)
+    await waitAndClick(getitemresult, newtab)
     await waitAndClick("#add-to-cart-button", newtab)
-    console.log("Amazon cart")
 }
 
 async function waitAndClick(selector, newtab){
