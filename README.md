@@ -1,4 +1,4 @@
-# Grocery Price_Comparison between Amazon and Dmart
+# Grocery Price_Comparison between Amazon and Dmart - Automation
 
 This is a javascript Automation project, to compare the item prices b/w 2 webistes and add the item in the cart of website with best price.
 
